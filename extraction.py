@@ -21,10 +21,9 @@ if args.create_cfg:
 
     Path.mkdir(project_path, exist_ok=True)
     Path.mkdir(image_path, exist_ok=True)
-
     config["General"] = {
-        'database_path': args.database_path,
-        'image_path': f'{image_path}',
+        'database_path': database_path,
+        'image_path': image_path,
         'camera_mode': -1,
         'descriptor_normalization': 'l1_root',
     }
@@ -69,9 +68,6 @@ if args.execute:
 
     print('Executing the extraction script...')
 
-    config = configparser.ConfigParser()
-    config.read('cfgs/extraction.ini')
-
-    command = ['colmap', 'feature_extractor']
+    command = ['colmap', 'feature_extractor', '--database_path', 'venice_video/database.db', '--project_path', 'cfgs/extraction.ini']
 
     subprocess.run(command)
