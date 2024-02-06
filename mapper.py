@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 
 # Parse command-line arguments
 parser = ArgumentParser(description='Run COLMAP mapper.')
-parser.add_argument('--project_path', default='cfgs/mapping.ini', help='Path to the project folder.')
+parser.add_argument('--project_path', default='configs/mapping.ini', help='Path to the project folder.')
 parser.add_argument('--database_path', default='venice_video/database.db', help='Path to the database file.')
 parser.add_argument('--output_path', default='venice_video/sparse', help='Path to the output folder.')
 parser.add_argument('--image_path', default='venice_video/images', help='Path to the images folder.')
@@ -47,7 +47,6 @@ if args.create_cfg:
         'ba_local_num_images': 6,
         'ba_local_function_tolerance': 0,
         'ba_local_max_num_iterations': 25,
-        'ba_global_use_pba': 0,
         'ba_global_pba_gpu_index': -1,
         'ba_global_images_ratio': 1.1,
         'ba_global_points_ratio': 1.1,
@@ -88,7 +87,7 @@ if args.create_cfg:
     }
 
     # Write the configuration to a file
-    with open('cfgs/mapping.ini', 'w') as configfile:
+    with open(args.project_path, 'w') as configfile:
         config.write(configfile)
 
 if args.execute:

@@ -5,7 +5,7 @@ from pprint import pprint
 import subprocess
 
 parser = argparse.ArgumentParser(description='Create a configuration file.')
-parser.add_argument('--project_name', default='venice_video', help='The name of the project.')
+parser.add_argument('--project_name', default='', help='The name of the project.')
 parser.add_argument('-c', '--create_cfg', action='store_true', help='Create a configuration file.')
 parser.add_argument('-e', '--execute', action='store_true', help='Execute the extraction script.')
 args = parser.parse_args()
@@ -59,10 +59,10 @@ if args.create_cfg:
         'dsp_num_scales': 10,
     }
 
-    with open('cfgs/extraction.ini', 'w') as configfile:
+    with open('configs/extraction.ini', 'w') as configfile:
         config.write(configfile, space_around_delimiters=True)
 
-    print(f'Configuration file created at {Path.cwd() / "cfgs" / "extraction.ini"}')
+    print(f'Configuration file created at {Path.cwd() / "configs" / "extraction.ini"}')
 
 if args.execute:
 
