@@ -58,20 +58,5 @@ if args.create_cfg:
     # Write the configuration to a file
     with open(args.project_path, 'w') as configfile:
         config.write(configfile, space_around_delimiters=True)
-
-# create ini
-# if args.execute:
-
-#     # Build the command to run the matcher
-#     command = ['colmap', 'sequential_matcher', '--project_path', args.project_path]
-    
-#     if args.helpx:
-#         command.append('--help')
-
-#     print(command)
-
-#     # Run the matcher
-#     subprocess.run(command)
-    
     
 # colmap sequential_matcher --project_path configs/matching.ini

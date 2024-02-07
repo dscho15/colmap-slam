@@ -1,0 +1,10 @@
+{
+    "path_to_data": "/mnt/nvme0/datasets/video_blue_sky/videoes_from_michael/vid7/FRAMES/C0044",
+    "path_to_sampled_data": "/mnt/nvme0/datasets/video_blue_sky/videoes_from_michael/vid7/FRAMES_SAMPLED/C0044",
+    "save_cfg_path": "configs/C0044/cfg.csv",
+    "file_ext": ".jpg",
+    "max_n_features": 8192,
+    "median_tsh": 5.0,
+    "verbose": true,
+    "skip_prune": false
+}

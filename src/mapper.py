@@ -89,18 +89,3 @@ if args.create_cfg:
     # Write the configuration to a file
     with open(args.project_path, 'w') as configfile:
         config.write(configfile)
-
-if args.execute:
-
-    import subprocess
-
-    # Build the command to run the mapper
-    command = ['colmap', 'mapper', '--project_path', 'cfgs/mapping.ini']
-
-    if args.helpx:
-        command.append('--help')
-    
-    print(command)
-
-    # Run the mapper
-    subprocess.run(command)

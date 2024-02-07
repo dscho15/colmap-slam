@@ -1,3 +1,6 @@
 venice_video/*
 cfgs/*
 videoes/*
+*.csv
+*__pycache__/*
+*.pyc
