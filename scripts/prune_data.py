@@ -1,50 +1,57 @@
-from pathlib import Path
-from pprint import pprint
-
-import concurrent.futures
-import shutil
-import pandas as pd
-import cv2
-import numpy as np
-import json
-
-from tqdm import tqdm
-from deps.feature_matcher import FeatureMatcher
-from deps.feature_extractor import RootSiftExtractor
 
 from argparse import ArgumentParser
+from deps.feature_extractor import RootSiftExtractor
+from deps.feature_matcher import FeatureMatcher
+from pathlib import Path
+from pprint import pprint
+from pydantic import BaseModel, ValidationError
+from tqdm import tqdm
+
+import concurrent.futures
+import cv2
+import json
+import numpy as np
+import pandas as pd
+import shutil
+
+def load_image(image_path, grayscale: bool = True):
+    return cv2.imread(image_path, cv2.IMREAD_GRAYSCALE if grayscale else cv2.IMREAD_COLOR)
+
+class Configuration(BaseModel):
+    path_to_data: str
+    path_to_sampled_data: str
+    save_cfg_path: str
+    file_ext: str = ".jpg"
+    max_n_features: int = 8192
+    median_tsh: float = 5.0
+    verbose: bool = True
+    skip_prune: bool = True
+
+    class Config:
+        allow_extra = True
 
 if __name__ == "__main__":
 
-    # argparse input json
+    # parse the command line arguments
     args = ArgumentParser()
     args.add_argument("config", type=str, help="Path to the configuration file.")
     args = args.parse_args()
 
+    # load the configuration file
     with open(args.config) as f:
         json_data = json.load(f)
 
-    flag = False
-    if not json_data:
-        flag = True
-        json_data = {
-            "path_to_data": "",
-            "path_to_sampled_data": "",
-            "save_cfg_path": "",
-            "file_ext": ".jpg",
-            "max_n_features": 8192,
-            "median_tsh": 5.0,
-            "verbose": True,
-            "skip_prune": False
-        }
-    
-    # save the configuration file
-    with open(args.config, 'w') as f:
-        json.dump(json_data, f, indent=4)
-        
-    if flag:
-        print("Please fill in the configuration file and run the script again.")
-        exit(0)
+    # validate the configuration file
+    try:
+        config = Configuration(**json_data)
+    except:
+        json_data = Configuration(path_to_data="",
+                                  path_to_sampled_data="",
+                                  save_cfg_path="")
+        data = json_data.model_dump()
+        with open(args.config, 'w') as f:
+            json.dump(data, f, indent=4)
+        print(f"Invalid configuration file, please check the file at {args.config}")
     
     def print_verbose(msg):
         if json_data["verbose"]:
@@ -58,9 +65,6 @@ if __name__ == "__main__":
         image_paths = [str(image.absolute()) for image in image_paths]
         
         print_verbose(f"Number of images: {len(image_paths)}")
-        
-        def load_image(image_path, grayscale: bool = True):
-            return cv2.imread(image_path, cv2.IMREAD_GRAYSCALE if grayscale else cv2.IMREAD_COLOR)
         
         with concurrent.futures.ProcessPoolExecutor() as executor:
             images = list(tqdm(executor.map(load_image, image_paths), total=len(image_paths)))
@@ -77,64 +81,44 @@ if __name__ == "__main__":
         }
 
         for i, img in tqdm(enumerate(image_paths)):
-            
             processed_images.append(img)
             
             if prev_img is None:
-                
                 prev_img = images[i]
                 (prev_kps, prev_desc) = feature_extractor(prev_img)
-                
                 used.append(True)
             
             else:
-                
                 cur_img = images[i]
                 (cur_kps, cur_desc) = feature_extractor(cur_img)
-                    
                 matches = feature_matcher(prev_desc, cur_desc, prev_kps, cur_kps)
-
                 matches = np.array(matches)
                 distances = np.linalg.norm(prev_kps[matches[:, 0]] - cur_kps[matches[:, 1]], axis=1)
-                
                 median_distance, standard_deviation = np.median(distances), np.std(distances)
-                
-                print_verbose(f"Median distance: {median_distance}, number of matches: {len(matches)}, std: {standard_deviation}")
-                
                 if median_distance > json_data["median_tsh"]:
-                    
                     prev_img = cur_img
                     prev_kps, prev_desc = cur_kps, cur_desc
                     used.append(True)
-                
                 else:
-                    
                     used.append(False)
 
             if i % 25 == 0:
-                
                 output_dict["is_used"] = used
-                
                 dataframe = pd.DataFrame(output_dict)
                 dataframe.to_csv(json_data["save_cfg_path"], index=False)
-
-        print("Pruning done, exiting.")
-        exit()
         
-    print("Pruning skipped, sampling data required for colmap")
+    print_verbose("Pruning skipped, sampling data required for colmap")
     
     dataframe = pd.read_csv(json_data["save_cfg_path"])
     sample_data_p = Path(json_data["path_to_sampled_data"])
     sample_data_p.mkdir(parents=True, exist_ok=True)
-    
-    j = 0
-    for i, row in tqdm(dataframe.iterrows()):
-        
-        img = row["images"]
-        
-        if row["is_used"]:
 
+    j = 0  # Initialize counter for output images
+    for _, row in tqdm(dataframe.iterrows()):
+        if row["is_used"]:
+            img = row["images"]
             idx = f"{j}".zfill(5)
             o = sample_data_p / f"image_{idx}.jpg"
             shutil.copy(img, o)
-            j += 1
+            j += 1  # Increment counter only when the condition is met
+
