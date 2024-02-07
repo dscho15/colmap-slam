@@ -1,19 +1,19 @@
-import configparser
 from pathlib import Path
 import argparse
-from pprint import pprint
+import configparser
 
-# Parse command-line arguments
 parser = argparse.ArgumentParser(description='Create a configuration file.')
-parser.add_argument('--project_name', default='', help='The name of the project.')
-parser.add_argument('-e', '--execute', action='store_true', help='Execute the extraction script.')
+parser.add_argument('project_name', default="extraction", help='The name of the project.')
+parser.add_argument('path', help='The path to the project.')
+parser.add_argument('-p_imgs', '--path_to_images', default=None, help='The path to the images.')
 args = parser.parse_args()
 
 config = configparser.ConfigParser()
 
 project_name = args.project_name
-project_path = Path.cwd() / project_name
-image_path = project_path / 'images'
+project_path = Path(args.path)
+
+image_path = project_path / 'images' if args.path_to_images is None else Path(args.path_to_images)
 database_path = project_path / 'database.db'
 
 Path.mkdir(project_path, exist_ok=True)
@@ -23,7 +23,7 @@ config["General"] = {
     'database_path': database_path,
     'image_path': image_path,
     'camera_mode': -1,
-    'descriptor_normalization': 'l1_root',
+    'descriptor_normalization': 'l1_root'
 }
 
 config["ImageReader"] = {
@@ -57,7 +57,12 @@ config["SiftExtraction"] = {
     'dsp_num_scales': 10,
 }
 
-with open('configs/extraction.ini', 'w') as configfile:
+with open(Path(args.path) / (args.project_name + "_extraction.ini"), 'w') as configfile:
     config.write(configfile, space_around_delimiters=True)
 
-print(f'Configuration file created at {Path.cwd() / "configs" / "extraction.ini"}')
+# delete the first row in the file
+with open(Path(args.path) / (args.project_name + "_extraction.ini"), 'r') as fin:
+    data = fin.read().splitlines(True)
+
+with open(Path(args.path) / (args.project_name + "_extraction.ini"), 'w') as fout:
+    fout.writelines(data[1:])

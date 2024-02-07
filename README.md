@@ -10,3 +10,5 @@ conda install -c bottler nvidiacub
 colmap feature_extractor --project_path configs/extraction.ini
 colmap sequential_matcher --project_path configs/matching.ini
 colmap mapper --project_path configs/mapping.ini
+
+# remember install nvidia-docker dependencies

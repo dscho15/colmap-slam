@@ -4,7 +4,7 @@
     "save_cfg_path": "configs/C0044/cfg.csv",
     "file_ext": ".jpg",
     "max_n_features": 8192,
-    "median_tsh": 5.0,
+    "median_tsh": 10.0,
     "verbose": true,
     "skip_prune": false
 }

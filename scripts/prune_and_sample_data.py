@@ -3,8 +3,7 @@ from argparse import ArgumentParser
 from deps.feature_extractor import RootSiftExtractor
 from deps.feature_matcher import FeatureMatcher
 from pathlib import Path
-from pprint import pprint
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 from tqdm import tqdm
 
 import concurrent.futures

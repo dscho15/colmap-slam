@@ -1,1 +1,4 @@
 pytube
+opencv-python
+pandas
+tqdm
