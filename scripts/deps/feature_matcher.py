@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-import logging
 
 class FeatureMatcher:
     ratio_test = 0.5
@@ -11,12 +10,11 @@ class FeatureMatcher:
     def __init__(
         self,
         norm_type: int = cv2.NORM_L1,
-        cross_check: bool = False,
+        cross_check: bool = True,
         ratio_test: float = 0.5,
     ) -> None:
         self.cross_check = cross_check
-        self.matcher = cv2.BFMatcher(norm_type, cross_check)
-        self.matcher_name = "FeatureMatcher"
+        self.matcher = cv2.BFMatcher(norm_type)
         self.norm_type = norm_type
         self.ratio_test = ratio_test
 
@@ -26,16 +24,11 @@ class FeatureMatcher:
         desc2: np.ndarray,
         kps1: np.ndarray,
         kps2: np.ndarray,
-        mask: np.ndarray = None,
     ):
         indices1, indices2 = [], []
 
-        init_matches1 = self.matcher.knnMatch(desc1, desc2, k=2, mask=mask)
-        init_matches2 = self.matcher.knnMatch(desc2, desc1, k=2, mask=mask)
-
-        logging.info(
-            f"{self.matcher_name}: {len(init_matches1)} initial matches \t ⊂(◉‿◉)つ"
-        )
+        init_matches1 = self.matcher.knnMatch(desc1, desc2, k=2)
+        init_matches2 = self.matcher.knnMatch(desc2, desc1, k=2)
 
         matches = []
         for i, (m1, n1) in enumerate(init_matches1):
@@ -57,11 +50,9 @@ class FeatureMatcher:
         if type(kps1) is list and type(kps2) is list:
             points1 = np.array([kps1[m.queryIdx].pt for m in matches])
             points2 = np.array([kps2[m.trainIdx].pt for m in matches])
-        elif type(kps1) is np.ndarray and type(kps2) is np.ndarray:
+        else:
             points1 = np.array([kps1[m.queryIdx] for m in matches])
             points2 = np.array([kps2[m.trainIdx] for m in matches])
-        else:
-            raise Exception("kps1 and kps2 must be both list or np.ndarray")
         
         _, mask = cv2.findFundamentalMat(
             points1=points1,
@@ -69,11 +60,6 @@ class FeatureMatcher:
             method=self.fm_ransac_method,
             ransacReprojThreshold=self.fm_ransac_reproj_threshold,
             confidence=self.fm_ransac_confidence,
-        )
-        n_inlier = np.count_nonzero(mask)
-
-        logging.info(
-            f"{self.matcher_name}: {n_inlier}/{len(matches)} ({n_inlier/len(matches)*100:.2f}%) inliers \t (ㆆ _ ㆆ)"
         )
 
         indices1 = np.array(indices1)[mask.ravel() == 1]
